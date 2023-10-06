@@ -2,7 +2,8 @@ import sqlite3
 import pandas as pd
 
 # Load data from the XLSX file into a DataFrame
-xlsx_filename = "scraped_data.xlsx"
+# xlsx_filename = "scraped_data.xlsx"
+xlsx_filename = "scraped_data_new.xlsx"
 df = pd.read_excel(xlsx_filename)
 
 # Create a database connection

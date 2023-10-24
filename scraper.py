@@ -27,7 +27,7 @@ driver = webdriver.Chrome(options=chrome_options)
 all_vehicle_data = []
 
 # Number of pages to scrape
-num_pages_to_scarpe = 5
+num_pages_to_scarpe = 55
 
 # test scrape 1 page
 # num_pages_to_scarpe = 1
@@ -81,6 +81,8 @@ for page_number in range(1, num_pages_to_scarpe + 1):
 
             except:
                 mileage = "N/A"
+
+            # TODO - Year is not being converted to int
 
             try:
                 year_element = vehicle_element.find_element(
@@ -206,14 +208,17 @@ for page_number in range(1, num_pages_to_scarpe + 1):
                 price = price_element.text.strip()
 
                 # remove $ from Price column
-                price = price.replace("$", "")
+                # price = price.replace("$", "")
+                price = price.replace("$", "").replace(",", "")
 
                 # convert Price to float with 2 decimal places
-                price = float(price.replace(",", ""))
-                price = round(price, 2)
+                price = round(float(price), 2)
 
             except:
                 price = "SOLD"  # Set the price to "SOLD" if the element is not found
+
+                # Skip the current vehicle if the price is "SOLD"
+                continue
 
             # Store extracted data in a dict
             vehicle_info = {
@@ -252,7 +257,8 @@ df.reset_index(drop=True, inplace=True)
 # print(df)
 
 # Save DF to XLSX file
-xlsx_filename = "scraped_data.xlsx"
+
+xlsx_filename = "scraped_data_for_project.xlsx"
 
 
 # Check if file already exists

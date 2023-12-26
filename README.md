@@ -6,7 +6,7 @@ The project that started out in 2019, went through a few itterations, and differ
 
 <!-- Currently, it scrapes data off "unlisted" site, stores data into DataFrame, that exports into XLSX file, which then loads into SQLite3 DB.  -->
 
-This project was used for my ACIT 4880 course (Introduction to Data Analytics) to mine data and analyze how different features affect the prices of vehicles. The data is saved in an XLSX file, which, is used for creating, developing, and training few predictive MLM (Linear, Decision Tree & Random Forest Regression Models) 
+The script mines (scrapes) data from "unlisted" site and stores the data into an XLSX file that can used by Discord to send messages by a bot of listings that meet the requirements. 
 
 
 

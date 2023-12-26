@@ -1,7 +1,5 @@
 # Ignore
 .env
-./MLM
-/Datasets
 ./chromedriver-win64
 ./Save_to_DB
 .cars.xlsx

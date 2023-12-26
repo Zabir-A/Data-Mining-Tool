@@ -106,7 +106,9 @@ def setup_database():
             total_price REAL,
             link TEXT,
             colour TEXT,
-            location TEXT
+            location TEXT,
+            sent_to_discord INTEGER DEFAULT 0
+
         )
     """
     )

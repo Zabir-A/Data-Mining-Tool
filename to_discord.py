@@ -12,7 +12,8 @@ import sqlite3
 load_dotenv()
 # XLSX_FILENAME = os.getenv("XLSX_FILENAME")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-DB_FILE = "vehicles.db"
+# DB_FILE = "vehicles.db"
+DB_FILE = os.getenv("DB_FILE")
 
 
 # df = pd.read_excel(XLSX_FILENAME)
@@ -69,7 +70,8 @@ conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
 
 # Query the database for vehicle data
-cursor.execute("SELECT * FROM vehicles")  # Adjust the query as needed
+# cursor.execute("SELECT * FROM vehicles")  # Adjust the query as needed
+cursor.execute("SELECT * FROM vehicles WHERE sent_to_discord = 0")
 vehicles = cursor.fetchall()
 
 links = []
@@ -109,8 +111,24 @@ for vehicle in vehicles:
         if len(links) >= 6:
             break
 
-conn.close()
+# conn.close()
 
 if links:
     links_str = "\n".join(links)
     send_to_discord(links_str, "Helo Sir, I found some cars you might like:")
+
+    # Update the sent_to_discord flag
+    for link in links:
+        cursor.execute(
+            "UPDATE vehicles SET sent_to_discord = 1 WHERE link = ?", (link,)
+        )
+
+    conn.commit()
+
+else:
+    # If no links are found, send a different message to Discord
+    send_to_discord(
+        "There are no more links to send that meet the requirements.", "Update:"
+    )
+
+conn.close()

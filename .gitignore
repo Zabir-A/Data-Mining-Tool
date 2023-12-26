@@ -1,6 +1,5 @@
 # Ignore
 .env
 ./chromedriver-win64
-./Save_to_DB
 .cars.xlsx
 ./env

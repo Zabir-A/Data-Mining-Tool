@@ -20,7 +20,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
+from selenium.common.exceptions import WebDriverException
 import sys
 import pandas as pd
 import os
@@ -37,7 +37,6 @@ load_dotenv()
 BASE_URL = os.getenv("BASE_URL")
 NUM_PAGES = int(os.getenv("NUM_PAGES"))
 DELAY = int(os.getenv("DELAY"))
-# ROWS_PER_FILE = int(os.getenv("ROWS_PER_FILE"))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES"))
 LOG_DIRECTORY = os.getenv("LOG_DIRECTORY")
 XLSX_FILENAME = os.getenv("XLSX_FILENAME")
@@ -349,16 +348,6 @@ def scrape_pages(
         df.reset_index(drop=True, inplace=True)
         df.to_excel(XLSX_FILENAME, index=False)
 
-    # elapsed_time_s = time.time() - start_time
-    # elapsed_time_m, elapsed_time_s = divmod(int(elapsed_time_s), 60)
-
-    # time_message = (
-    #     f"{elapsed_time_m} minutes and {elapsed_time_s} seconds"
-    #     if elapsed_time_m
-    #     else f"{elapsed_time_s} seconds"
-    # )
-
-    # logging.info(f"Time taken: {time_message}")
     logging.info(f"Total number of vehicles scraped: {len(all_vehicle_data)}")
     logging.info(f"Total pages to be scraped: {NUM_PAGES}")
     logging.info(f"Total pages successfully scraped: {successful_pages}")

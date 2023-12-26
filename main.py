@@ -21,15 +21,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
-import sys
-import pandas as pd
+
+# import sys
 import os
 import time
 import datetime
 from dotenv import load_dotenv
 import logging
-from requests.exceptions import RequestException
 import requests
+import sqlite3
 
 
 # Load environment variables
@@ -39,17 +39,17 @@ NUM_PAGES = int(os.getenv("NUM_PAGES"))
 DELAY = int(os.getenv("DELAY"))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES"))
 LOG_DIRECTORY = os.getenv("LOG_DIRECTORY")
-XLSX_FILENAME = os.getenv("XLSX_FILENAME")
-
-# local variables
-ROWS_PER_FILE = 1000000
 
 
 # Logging setup
 def setup_logging(LOG_DIRECTORY):
     """Setup logging configuration"""
     if not os.path.exists(LOG_DIRECTORY):
-        os.makedirs(LOG_DIRECTORY)
+        try:
+            os.makedirs(LOG_DIRECTORY)
+            logging.info(f"Directory {LOG_DIRECTORY} created.")
+        except Exception as e:
+            raise Exception(f"Error creating directory {LOG_DIRECTORY}: {e}")
         logging.info(f"Directory {LOG_DIRECTORY} created.")
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%I%M%p")
@@ -62,15 +62,6 @@ def setup_logging(LOG_DIRECTORY):
             logging.StreamHandler(),
         ],
     )
-
-
-# XLSX file check and deletion
-def check_xlsx_file(XLSX_FILENAME):
-    """Check if XLSX file exists and delete it if it does"""
-    if os.path.isfile(XLSX_FILENAME):
-        print(f"File {XLSX_FILENAME} already exists, deleting it...")
-        os.remove(XLSX_FILENAME)
-        logging.info("Previous XLSX deleted. Starting new script execution.")
 
 
 # Start timer
@@ -88,6 +79,39 @@ def init_webdriver():
     chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)
     return driver
+
+
+# Database setup
+def setup_database():
+    """Create SQLite table if it doesn't exist"""
+    conn = sqlite3.connect("vehicles.db")
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS vehicles (
+            ref_no TEXT PRIMARY KEY,
+            year INTEGER,
+            title TEXT,
+            mileage INTEGER,
+            engine_size INTEGER,
+            engine_code TEXT,
+            model_code TEXT,
+            transmission TEXT,
+            drive TEXT,
+            steering TEXT,
+            doors INTEGER,
+            seats INTEGER,
+            fuel_type TEXT,
+            auction_grade TEXT,
+            total_price REAL,
+            link TEXT,
+            colour TEXT,
+            location TEXT
+        )
+    """
+    )
+    conn.commit()
+    conn.close()
 
 
 # Function to extract vehicle data
@@ -215,6 +239,7 @@ def extract_vehicle_data(vehicle_element):
 
         fuel = fuel_element if fuel_element else ""
 
+        # Map fuel types to standardised values
         fuel_mapping = {
             "Hybrid(Petrol)": "Petrol",
             "Hybrid(Diesel)": "Diesel",
@@ -271,24 +296,65 @@ def extract_vehicle_data(vehicle_element):
         return None
 
 
-# Function to loop through pages
-def scrape_pages(
-    NUM_PAGES, DELAY, MAX_RETRIES, driver, BASE_URL, XLSX_FILENAME, extract_vehicle_data
-):
+# Function to check if vehicle exists in database
+def vehicle_exists(cursor, ref_no):
+    """Check if a record with the given ref_no already exists in the database."""
+    cursor.execute("SELECT 1 FROM vehicles WHERE ref_no = ?", (ref_no,))
+    return cursor.fetchone() is not None
+
+
+# Function to insert data into database
+def insert_vehicle_data(cursor, vehicle_data):
+    """Insert vehicle data into the database if it doesn't already exist."""
+    if not vehicle_exists(cursor, vehicle_data["Ref No"]):
+        try:
+            cursor.execute(
+                """
+                INSERT INTO vehicles (
+                    ref_no, year, title, mileage, engine_size, engine_code, 
+                    model_code, transmission, drive, steering, doors, seats, 
+                    fuel_type, auction_grade, total_price, link, colour, location
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    vehicle_data["Ref No"],
+                    vehicle_data["Year"],
+                    vehicle_data["Title"],
+                    vehicle_data["Mileage"],
+                    vehicle_data["Engine Size"],
+                    vehicle_data["Engine Code"],
+                    vehicle_data["Model Code"],
+                    vehicle_data["Transmission"],
+                    vehicle_data["Drive"],
+                    vehicle_data["Steering"],
+                    vehicle_data["Doors"],
+                    vehicle_data["Seats"],
+                    vehicle_data["Fuel Type"],
+                    vehicle_data["Auction Grade"],
+                    vehicle_data["Total Price"],
+                    vehicle_data["Link"],
+                    vehicle_data["Colour"],
+                    vehicle_data["Location"],
+                ),
+            )
+        except Exception as e:
+            logging.error(f"Error inserting data for {vehicle_data['Ref No']}: {e}")
+    else:
+        logging.info(
+            f"Record with Ref No {vehicle_data['Ref No']} already exists. Skipping insertion."
+        )
+
+
+# Function to scrape pages
+def scrape_pages(driver):
     """Loop through pages and scrape data"""
-    all_vehicle_data = []
-    seen_ref_no = set()
     successful_pages = 0
-
-    for page_number in range(1, NUM_PAGES + 1):
-        retries = 0
-        time.sleep(DELAY)
-
-        while retries < MAX_RETRIES:
+    with sqlite3.connect("vehicles.db") as conn:
+        cursor = conn.cursor()
+        for page_number in range(1, NUM_PAGES + 1):
+            time.sleep(DELAY)
             try:
                 driver.get(BASE_URL.format(page_number))
                 wait = WebDriverWait(driver, 120, poll_frequency=5)
-
                 vehicle_elements = wait.until(
                     EC.presence_of_all_elements_located(
                         (By.CSS_SELECTOR, ".stocklist-row")
@@ -296,88 +362,39 @@ def scrape_pages(
                 )
                 for vehicle_element in vehicle_elements:
                     vehicle_data = extract_vehicle_data(vehicle_element)
-
-                    # prevent duplicate ref_no
-                    if vehicle_data and vehicle_data["Ref No"] not in seen_ref_no:
-                        seen_ref_no.add(vehicle_data["Ref No"])
-                        all_vehicle_data.append(vehicle_data)
-
-                    # check if number of rows exceeds ROWS_PER_FILE
-                    if len(all_vehicle_data) >= ROWS_PER_FILE:
-                        df = pd.DataFrame(all_vehicle_data)
-                        df.to_excel(XLSX_FILENAME, index=False)
-                        logging.info(
-                            f"Data saved to {XLSX_FILENAME} due to exceeding {ROWS_PER_FILE} rows per file."
-                        )
-                        sys.exit(0)
-
+                    if vehicle_data:
+                        insert_vehicle_data(cursor, vehicle_data)
                 successful_pages += 1
                 logging.info(f"Page {page_number} processed successfully.")
-                break
-
-            except (WebDriverException, requests.exceptions.RequestException) as e:
-                logging.error(f"Error on page {page_number}: {e}")
-                logging.info("Refreshing page...")
-                driver.refresh()
-                retries += 1
-                if retries == MAX_RETRIES:
-                    logging.info(
-                        f"Page {page_number} failed to process after {MAX_RETRIES} retries."
-                    )
-                    df = pd.DataFrame(all_vehicle_data)
-                    df.to_excel(XLSX_FILENAME, index=False)
-                    logging.info(
-                        f"Data saved to {XLSX_FILENAME} due to too many failed retries."
-                    )
-                    sys.exit(0)
-
-            except KeyboardInterrupt:
-                df = pd.DataFrame(all_vehicle_data)
-                df.to_excel(XLSX_FILENAME, index=False)
-                logging.info(f"Data saved to {XLSX_FILENAME} due to KeyboardInterrupt.")
-                sys.exit(0)
-
             except Exception as e:
-                logging.error(f"Unexpected error on page {page_number}: {e}")
-
-    logging.info("All pages have been processed.")
-
-    # Save data to XLSX file
-    if all_vehicle_data:
-        df = pd.DataFrame(all_vehicle_data)
-        df.reset_index(drop=True, inplace=True)
-        df.to_excel(XLSX_FILENAME, index=False)
-
-    logging.info(f"Total number of vehicles scraped: {len(all_vehicle_data)}")
-    logging.info(f"Total pages to be scraped: {NUM_PAGES}")
-    logging.info(f"Total pages successfully scraped: {successful_pages}")
-
-    # Clean up
-    driver.quit()
-    logging.info("Script finished, scraping complete!")
+                logging.error(f"Error on page {page_number}: {e}")
+                if retries < MAX_RETRIES:
+                    retries += 1
+                    logging.info("Retrying...")
+                else:
+                    logging.error("Max retries reached, moving to next page.")
+                    break
+        logging.info(f"Total pages successfully scraped: {successful_pages}")
 
 
 if __name__ == "__main__":
     setup_logging(LOG_DIRECTORY)
-    check_xlsx_file(XLSX_FILENAME)
     start_time = start_timer()
     driver = init_webdriver()
-    scrape_pages(
-        NUM_PAGES,
-        DELAY,
-        MAX_RETRIES,
-        driver,
-        BASE_URL,
-        XLSX_FILENAME,
-        extract_vehicle_data,
-    )
+    setup_database()
 
-    elapsed_time_s = time.time() - start_time
-    elapsed_time_m, elapsed_time_s = divmod(int(elapsed_time_s), 60)
+    try:
+        scrape_pages(driver)
+    finally:
+        driver.quit()
+        logging.info("Script finished, scraping complete!")
 
-    time_message = (
-        f"{elapsed_time_m} minutes and {elapsed_time_s} seconds"
-        if elapsed_time_m
-        else f"{elapsed_time_s} seconds"
-    )
-    logging.info(f"Time taken: {time_message}")
+        elapsed_time_s = time.time() - start_time
+        elapsed_time_m, elapsed_time_s = divmod(int(elapsed_time_s), 60)
+
+        time_message = (
+            f"{elapsed_time_m} minutes and {elapsed_time_s} seconds"
+            if elapsed_time_m
+            else f"{elapsed_time_s} seconds"
+        )
+        logging.info(f"Time taken: {time_message}")

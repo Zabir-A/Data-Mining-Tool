@@ -1,0 +1,9 @@
+# Ignore
+.env
+./MLM
+./Datasets
+./chromedriver-win64
+./Old Code
+./Save_to_DB
+.cars.xlsx
+./env

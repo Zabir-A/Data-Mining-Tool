@@ -20,7 +20,7 @@ After undergoing various iterations and exploring different languages and framew
 
 Refer to `main.py` for the main script. 
 
-${\color{lightblue}To\ run\ the\ main\ project\ (scraper)}$:
+$\color{lightblue}To\ run\ the\ main\ project\ (scraper)$:
 
 - Ensure Python 3.11.6 or later is installed.
 

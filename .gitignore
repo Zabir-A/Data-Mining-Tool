@@ -3,3 +3,4 @@
 ./chromedriver-win64
 .cars.xlsx
 ./env
+.vehicles.db

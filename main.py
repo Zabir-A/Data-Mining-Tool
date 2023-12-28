@@ -37,6 +37,7 @@ NUM_PAGES = int(os.getenv("NUM_PAGES"))
 DELAY = int(os.getenv("DELAY"))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES"))
 LOG_DIRECTORY = os.getenv("LOG_DIRECTORY")
+YEAR_THRESHOLD = int(os.getenv("YEAR_THRESHOLD"))
 
 
 # Logging setup
@@ -46,8 +47,10 @@ def setup_logging(LOG_DIRECTORY):
         try:
             os.makedirs(LOG_DIRECTORY)
             logging.info(f"Directory {LOG_DIRECTORY} created.")
+
         except Exception as e:
             raise Exception(f"Error creating directory {LOG_DIRECTORY}: {e}")
+
         logging.info(f"Directory {LOG_DIRECTORY} created.")
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%I%M%p")
@@ -154,7 +157,11 @@ def extract_vehicle_data(vehicle_element):
         ### CHANGE YEARLY ###
 
         # Skip vehicles with a year greater than 2009
-        if year.isdigit() and int(year) > 2009:
+        # if year.isdigit() and int(year) > 2009:
+        #     logging.info(f"Vehicle {ref_no} is from {year}, skipping...")
+        #     return None
+
+        if year.isdigit() and int(year) > YEAR_THRESHOLD:
             logging.info(f"Vehicle {ref_no} is from {year}, skipping...")
             return None
 
@@ -364,6 +371,7 @@ def insert_vehicle_data(cursor, vehicle_data):
 def scrape_pages(driver):
     """Loop through pages and scrape data"""
     successful_pages = 0
+    pages_since_last_commit = 0  # Counter for pages processed since the last commit
 
     with sqlite3.connect("vehicles.db") as conn:
         cursor = conn.cursor()
@@ -385,11 +393,19 @@ def scrape_pages(driver):
 
                     for vehicle_element in vehicle_elements:
                         vehicle_data = extract_vehicle_data(vehicle_element)
+
                         if vehicle_data:
                             insert_vehicle_data(cursor, vehicle_data)
 
                     successful_pages += 1
+                    pages_since_last_commit += 1
+
+                    if pages_since_last_commit >= 20:
+                        conn.commit()
+                        pages_since_last_commit = 0
+
                     logging.info(f"Page {page_number} processed successfully.")
+
                     break  # Break out of the retries loop, go to next page
 
                 except (WebDriverException, requests.exceptions.RequestException) as e:
@@ -408,58 +424,8 @@ def scrape_pages(driver):
 
         logging.info(f"Total pages successfully scraped: {successful_pages}")
 
+        conn.commit()
 
-##############################################################################################
-
-
-# Check db against the vehciles price available on the website, if the 'Total Price' is 'SOLD' or 'UNDER OFFER' then delete the record from the db
-
-
-# def check_vehicle_status(driver, link):
-#     """Check the current status of the vehicle on the website."""
-#     try:
-#         driver.get(link)
-#         try:
-#             price_element = WebDriverWait(driver, 1).until(
-#                 EC.presence_of_element_located((By.CSS_SELECTOR, "p.total-price"))
-#             )
-#             price = price_element.text.strip().upper()
-#             if "SOLD" in price or "UNDER OFFER" in price or price == "ASK":
-#                 return False  # Vehicle is no longer available
-#         except TimeoutException:
-#             logging.info(f"No price information found for {link}")
-#         return True  # Vehicle is still available
-#     except WebDriverException as e:
-#         logging.error(f"Error accessing {link}: {e}")
-#         return None  # Unable to determine status
-
-
-# def update_db(driver):
-#     """Update database to remove vehicles that are no longer available or have been sold"""
-#     conn = sqlite3.connect("vehicles.db")
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT * FROM vehicles")
-#     vehicles = cursor.fetchall()
-
-#     for vehicle in vehicles:
-#         ref_no = vehicle[0]
-#         link = vehicle[15]
-
-#         is_available = check_vehicle_status(driver, link)
-
-#         if is_available is False:
-#             logging.info(
-#                 f"Vehicle {ref_no} has been sold or is under offer. Removing from database."
-#             )
-#             cursor.execute("DELETE FROM vehicles WHERE ref_no = ?", (ref_no,))
-
-#     conn.commit()
-#     conn.close()
-
-
-# Move to a separate file
-
-##############################################################################################
 
 if __name__ == "__main__":
     setup_logging(LOG_DIRECTORY)
@@ -469,7 +435,7 @@ if __name__ == "__main__":
 
     try:
         scrape_pages(driver)
-        # update_db(driver)
+
     finally:
         driver.quit()
         logging.info("Script finished, scraping complete!")

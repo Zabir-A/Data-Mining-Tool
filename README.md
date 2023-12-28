@@ -8,7 +8,7 @@ After undergoing various iterations and exploring different languages and framew
 
 ### Features
 
-- Data Mining: The core script (`main.py`) is designed to mine data from a selected vehicle auction site. It extracts detailed information about each vehicle. 
+- Data Mining: The core script (`scrape.py`) is designed to mine data from a selected vehicle auction site. It extracts detailed information about each vehicle. 
     
 - Database Integration: Scraped data is stored efficiently in an SQLite database.
 
@@ -50,9 +50,9 @@ Run <i>`python scheduler.py`</i>
 
 **To run indiviual scripts, proceed in the following order:**
 
-1. Start the data mining process (`scraper.py`):
+1. Start the data mining process (`scrape.py`):
 
-    <i>`python scraper.py`</i> - Mines and saves the vehicle data to the SQLite3 database
+    <i>`python scrape.py`</i> - Mines and saves the vehicle data to the SQLite3 database
 
 2. To check and update the database: 
 

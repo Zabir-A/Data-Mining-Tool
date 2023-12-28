@@ -20,7 +20,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.common.exceptions import WebDriverException
 import os
 import time
 import datetime
@@ -28,6 +28,10 @@ from dotenv import load_dotenv
 import logging
 import requests
 import sqlite3
+from fake_useragent import UserAgent
+
+# TODO:
+# - Add cookie support & handling
 
 
 # Load environment variables (Constants)
@@ -59,19 +63,17 @@ YEAR_THRESHOLD = calculate_year_threshold(BASE_YEAR, START_INCREMENT_YEAR)
 # Logging setup
 def setup_logging(LOG_DIRECTORY):
     """Setup logging configuration"""
-    if not os.path.exists(LOG_DIRECTORY):
-        try:
-            os.makedirs(LOG_DIRECTORY)
-            logging.info(f"Directory {LOG_DIRECTORY} created.")
 
-        except Exception as e:
-            raise Exception(f"Error creating directory {LOG_DIRECTORY}: {e}")
+    main_logs_dir = os.path.join(LOG_DIRECTORY, "main_logs")
 
-        logging.info(f"Directory {LOG_DIRECTORY} created.")
+    if not os.path.exists(main_logs_dir):
+        os.makedirs(main_logs_dir, exist_ok=True)
+        logging.info(f"Directory {main_logs_dir} created.")
 
     timestamp = datetime.datetime.now().strftime("%y-%m-%d_%I%M%p")
 
-    log_filename = f"{LOG_DIRECTORY}/scaping_log_{timestamp}.log"
+    # log_filename = f"{LOG_DIRECTORY}/scaping_log_{timestamp}.log"
+    log_filename = f"{main_logs_dir}/scraping_log_{timestamp}.log"  # Save logs in the main_logs subdirectory
 
     logging.basicConfig(
         level=logging.INFO,  # Log only INFO, WARNING, ERROR, and CRITICAL levels.
@@ -96,8 +98,16 @@ def init_webdriver():
     """Initialize Chrome WebDriver"""
     chrome_options = Options()
     chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)
-    return driver
+
+    # chrome_options.add_argument(
+    #     "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36"
+    # )
+
+    ua = UserAgent()
+    userAgent = ua.random
+    chrome_options.add_argument(f"user-agent={userAgent}")
+
+    return webdriver.Chrome(options=chrome_options)
 
 
 # Database setup

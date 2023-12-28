@@ -2,4 +2,5 @@ fake_useragent==1.4.0
 pandas==2.1.4
 python-dotenv==1.0.0
 Requests==2.31.0
+schedule==1.2.1
 selenium==4.16.0

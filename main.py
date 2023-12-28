@@ -37,7 +37,23 @@ NUM_PAGES = int(os.getenv("NUM_PAGES"))
 DELAY = int(os.getenv("DELAY"))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES"))
 LOG_DIRECTORY = os.getenv("LOG_DIRECTORY")
-YEAR_THRESHOLD = int(os.getenv("YEAR_THRESHOLD"))
+BASE_YEAR = int(os.getenv("BASE_YEAR", 2009))  # Default to 2009 if BASE_YEAR is not set
+
+
+def calculate_year_threshold(base_year, start_increment_year):
+    """Calculate year threshold based on the current year and increment year threshold"""
+    current_year = datetime.datetime.now().year
+    if current_year >= start_increment_year:
+        return base_year + (current_year - start_increment_year + 1)
+    else:
+        return base_year
+
+
+START_INCREMENT_YEAR = (
+    2024  # Change this to the year you want to start incrementing the year threshold
+)
+
+YEAR_THRESHOLD = calculate_year_threshold(BASE_YEAR, START_INCREMENT_YEAR)
 
 
 # Logging setup
@@ -154,8 +170,6 @@ def extract_vehicle_data(vehicle_element):
 
         #####################
 
-        ### CHANGE YEARLY ###
-
         # Skip vehicles with a year greater than 2009
         # if year.isdigit() and int(year) > 2009:
         #     logging.info(f"Vehicle {ref_no} is from {year}, skipping...")
@@ -170,16 +184,16 @@ def extract_vehicle_data(vehicle_element):
         engine_element = vehicle_element.find_element(By.CSS_SELECTOR, ".engine p.val")
         engine_size = engine_element.text.strip().replace("cc", "").replace(",", "")
 
-        # engine_size = int(engine_size) if engine_size.isdigit() else ""
-
         # convert engine size to float
         engine_size = float(engine_size) if engine_size.isdigit() else ""
+
         # convert engine size to litres
         engine_size = engine_size / 1000
 
         transmission_element = vehicle_element.find_element(
             By.CSS_SELECTOR, ".trans p.val"
         )
+
         transmission = transmission_element.text.strip()
         transmission = transmission if transmission else ""
 
@@ -192,11 +206,13 @@ def extract_vehicle_data(vehicle_element):
 
         specs_table = vehicle_element.find_element(By.CLASS_NAME, "table-detailed-spec")
         table_rows = specs_table.find_elements(By.TAG_NAME, "tr")
+
         engine_code = (
             table_rows[1].find_elements(By.TAG_NAME, "td")[1].text.strip()
             if len(table_rows) >= 2
             else ""
         )
+
         if engine_code == "0":
             engine_code = ""
 
@@ -245,6 +261,7 @@ def extract_vehicle_data(vehicle_element):
         auc_table = vehicle_element.find_element(
             By.CSS_SELECTOR, ".table-detailed-spec"
         )
+
         auc_rows = auc_table.find_elements(By.TAG_NAME, "tr")
 
         auction_grade = (

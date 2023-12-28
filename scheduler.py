@@ -4,7 +4,7 @@ import subprocess
 
 
 def run_scraper():
-    subprocess.run(["python", "main_scrape.py"])
+    subprocess.run(["python", "scrape.py"])
 
 
 def run_check_db():

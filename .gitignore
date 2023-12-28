@@ -1,6 +1,6 @@
 # Ignore
 .env
 ./chromedriver-win64
-.cars.xlsx
+.main_old.py
 ./env
 .vehicles.db

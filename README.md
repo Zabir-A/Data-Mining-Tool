@@ -24,21 +24,21 @@ To run the main project (scraper):
 
 - Ensure Python 3.11.6 or later is installed.
 
-- Install required dependencies: `pip install -r requirements.txt`.
+- Install required dependencies: <i>`pip install -r requirements.txt`</i>.
     
 - Configure environment variables for database and Discord API credentials.
 
-- Run `python main.py` to start the data mining process.
+- Run <i>`python main.py`</i> to start the data mining process.
 
 To Update Database:
 
-- Run `python check_db.py`
+- Run <i>`python check_db.py`</i>
 
 It will check the database with the site and remove any records of vehicles that's no longer available (sold or under offer)
 
 To send listing to Discord:
 
-- Run `python to_discord.py`
+- Run <i>`python to_discord.py`</i>
 
 It will send listings that meet the current criteria, it is defined in the script.
 

@@ -59,6 +59,8 @@ It will send listings that meet the current criteria, it is defined in the scrip
     
 - A `.env` file must be placed in the same directory as the script for loading environment variables.
 
+- To update and test functionality with different User Agents, refer to: https://pypi.org/project/fake-useragent/
+
 ### Future Enhancements
 
 <!-- - Implementing advanced data analysis techniques on the scraped data for insights and trends. -->

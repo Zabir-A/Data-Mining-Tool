@@ -162,7 +162,13 @@ def extract_vehicle_data(vehicle_element):
 
         engine_element = vehicle_element.find_element(By.CSS_SELECTOR, ".engine p.val")
         engine_size = engine_element.text.strip().replace("cc", "").replace(",", "")
-        engine_size = int(engine_size) if engine_size.isdigit() else ""
+
+        # engine_size = int(engine_size) if engine_size.isdigit() else ""
+
+        # convert engine size to float
+        engine_size = float(engine_size) if engine_size.isdigit() else ""
+        # convert engine size to litres
+        engine_size = engine_size / 1000
 
         transmission_element = vehicle_element.find_element(
             By.CSS_SELECTOR, ".trans p.val"

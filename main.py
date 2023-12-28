@@ -21,8 +21,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
-
-# import sys
 import os
 import time
 import datetime
@@ -32,7 +30,7 @@ import requests
 import sqlite3
 
 
-# Load environment variables
+# Load environment variables (Constants)
 load_dotenv()
 BASE_URL = os.getenv("BASE_URL")
 NUM_PAGES = int(os.getenv("NUM_PAGES"))
@@ -151,9 +149,16 @@ def extract_vehicle_data(vehicle_element):
         year = year_element.text.strip()[:4].replace(",", "")
         year = year if year else ""
 
-        # Skip vehicles with a year greater than 2010
-        # if year.isdigit() and int(year) > 2010:
-        #     return None
+        #####################
+
+        ### CHANGE YEARLY ###
+
+        # Skip vehicles with a year greater than 2009
+        if year.isdigit() and int(year) > 2009:
+            logging.info(f"Vehicle {ref_no} is from {year}, skipping...")
+            return None
+
+        #####################
 
         engine_element = vehicle_element.find_element(By.CSS_SELECTOR, ".engine p.val")
         engine_size = engine_element.text.strip().replace("cc", "").replace(",", "")
@@ -350,34 +355,96 @@ def insert_vehicle_data(cursor, vehicle_data):
 def scrape_pages(driver):
     """Loop through pages and scrape data"""
     successful_pages = 0
+
     with sqlite3.connect("vehicles.db") as conn:
         cursor = conn.cursor()
+
         for page_number in range(1, NUM_PAGES + 1):
+            retries = 0  # Initialize retries for each page
             time.sleep(DELAY)
-            try:
-                driver.get(BASE_URL.format(page_number))
-                wait = WebDriverWait(driver, 120, poll_frequency=5)
-                vehicle_elements = wait.until(
-                    EC.presence_of_all_elements_located(
-                        (By.CSS_SELECTOR, ".stocklist-row")
+
+            while retries < MAX_RETRIES:
+                try:
+                    driver.get(BASE_URL.format(page_number))
+                    wait = WebDriverWait(driver, 120, poll_frequency=5)
+
+                    vehicle_elements = wait.until(
+                        EC.presence_of_all_elements_located(
+                            (By.CSS_SELECTOR, ".stocklist-row")
+                        )
                     )
-                )
-                for vehicle_element in vehicle_elements:
-                    vehicle_data = extract_vehicle_data(vehicle_element)
-                    if vehicle_data:
-                        insert_vehicle_data(cursor, vehicle_data)
-                successful_pages += 1
-                logging.info(f"Page {page_number} processed successfully.")
-            except Exception as e:
-                logging.error(f"Error on page {page_number}: {e}")
-                if retries < MAX_RETRIES:
+
+                    for vehicle_element in vehicle_elements:
+                        vehicle_data = extract_vehicle_data(vehicle_element)
+                        if vehicle_data:
+                            insert_vehicle_data(cursor, vehicle_data)
+
+                    successful_pages += 1
+                    logging.info(f"Page {page_number} processed successfully.")
+                    break  # Break out of the retries loop, go to next page
+
+                except (WebDriverException, requests.exceptions.RequestException) as e:
+                    logging.error(f"Error on page {page_number}: {e}")
+                    logging.info("Refreshing page...")
+                    driver.refresh()
                     retries += 1
-                    logging.info("Retrying...")
-                else:
-                    logging.error("Max retries reached, moving to next page.")
-                    break
+
+                except KeyboardInterrupt:
+                    logging.info("Keyboard interrupt detected, exiting...")
+                    return
+
+                except Exception as e:
+                    logging.error(f"Error on page {page_number}: {e}")
+                    break  # Break out of the retries loop due to unexpected error
+
         logging.info(f"Total pages successfully scraped: {successful_pages}")
 
+
+##############################################################################################
+
+
+# Update DB to remove vehicles that are no longer available or have been sold or under offer
+def update_db():
+    """Update database to remove vehicles that are no longer available or have been sold"""
+    conn = sqlite3.connect("vehicles.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM vehicles")
+    vehicles = cursor.fetchall()
+
+    for vehicle in vehicles:
+        ref_no = vehicle[0]
+        price = vehicle[14]  # Check what column the price is in
+        link = vehicle[15]
+
+        try:
+            response = requests.get(link)
+            # if response.status_code == 404:
+            if (
+                response.status_code == 404
+                or "SOLD" in price.upper()
+                or "UNDER OFFER" in price.upper()
+            ):
+                if response.status_code == 404:
+                    logging.info(f"Vehicle {ref_no} is no longer available.")
+
+                else:
+                    logging.info(f"Vehicle {ref_no} has been sold or is under offer.")
+
+                cursor.execute("DELETE FROM vehicles WHERE ref_no = ?", (ref_no,))
+                conn.commit()
+
+        except Exception as e:
+            logging.error(f"Error checking vehicle {ref_no}: {e}")
+
+    conn.close()
+
+    pass
+
+
+
+
+
+##############################################################################################
 
 if __name__ == "__main__":
     setup_logging(LOG_DIRECTORY)
@@ -400,3 +467,5 @@ if __name__ == "__main__":
             else f"{elapsed_time_s} seconds"
         )
         logging.info(f"Time taken: {time_message}")
+
+    # update_db()

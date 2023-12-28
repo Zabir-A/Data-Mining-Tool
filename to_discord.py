@@ -2,8 +2,6 @@ from dotenv import load_dotenv
 import os
 import requests
 import json
-
-# import pandas as pd
 import time
 import sqlite3
 
@@ -22,23 +20,21 @@ DB_FILE = os.getenv("DB_FILE")
 def meets_requirements(vehicle):
     titles = ["TOYOTA", "LEXUS", "HONDA", "NISSAN", "SUBARU"]
     # max_year = 2009
-    max_year = 2020
     max_mileage = 180000
     max_price = 20000
-    transmission = ["AT", "CVT"]
-    fuel_type = ["Petrol"]
+    # transmission = ["AT", "CVT"]
+    # fuel_type = ["Petrol"]
     auction_grade = ["3", "3.5", "4"]
     location_jpn = ["Kobe", "Osaka", "Tokyo", "Nagoya", "Yokohama", "Fukuoka"]
 
     result = (
         any(title in vehicle["Title"] for title in titles)
         and int(vehicle["Mileage"]) <= max_mileage  # Convert to int
-        and int(vehicle["Year"]) <= max_year  # Convert to int
-        and vehicle["Transmission"] in transmission
-        and vehicle["Fuel Type"] in fuel_type
+        # and int(vehicle["Year"]) <= max_year  # Convert to int
+        # and vehicle["Transmission"] in transmission
+        # and vehicle["Fuel Type"] in fuel_type
         and vehicle["Auction Grade"] in auction_grade
         and vehicle["Location"] in location_jpn
-        and int(vehicle["Year"]) <= max_year  # Convert to int
         and int(vehicle["Total Price"]) <= max_price  # Convert to int
     )
     return result

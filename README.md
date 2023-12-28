@@ -16,6 +16,11 @@ After undergoing various iterations and exploring different languages and framew
 
 - Dynamic Configuration: The script supports dynamic year threshold for vehicle selection, allowing it to automatically adjust the criteria based on the current year.
 
+
+### Application Process / Flow Diagram
+
+![Alt text](diagram.png)
+
 ### Usage
 
 <!-- Refer to `scrape.py` for the main script.  -->

@@ -350,6 +350,9 @@ def insert_vehicle_data(cursor, vehicle_data):
             f"Record with Ref No {vehicle_data['Ref No']} already exists. Skipping insertion."
         )
 
+    if vehicle_exists(cursor, vehicle_data["Ref No"]):
+        logging.info(f"Vehicle {vehicle_data['Ref No']} added successfully.")
+
 
 # Function to scrape pages
 def scrape_pages(driver):
@@ -406,49 +409,49 @@ def scrape_pages(driver):
 # Check db against the vehciles price available on the website, if the 'Total Price' is 'SOLD' or 'UNDER OFFER' then delete the record from the db
 
 
-def check_vehicle_status(driver, link):
-    """Check the current status of the vehicle on the website."""
-    try:
-        driver.get(link)
-        try:
-            price_element = WebDriverWait(driver, 1).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "p.total-price"))
-            )
-            price = price_element.text.strip().upper()
-            if "SOLD" in price or "UNDER OFFER" in price or price == "ASK":
-                return False  # Vehicle is no longer available
-        except TimeoutException:
-            logging.info(f"No price information found for {link}")
-        return True  # Vehicle is still available
-    except WebDriverException as e:
-        logging.error(f"Error accessing {link}: {e}")
-        return None  # Unable to determine status
+# def check_vehicle_status(driver, link):
+#     """Check the current status of the vehicle on the website."""
+#     try:
+#         driver.get(link)
+#         try:
+#             price_element = WebDriverWait(driver, 1).until(
+#                 EC.presence_of_element_located((By.CSS_SELECTOR, "p.total-price"))
+#             )
+#             price = price_element.text.strip().upper()
+#             if "SOLD" in price or "UNDER OFFER" in price or price == "ASK":
+#                 return False  # Vehicle is no longer available
+#         except TimeoutException:
+#             logging.info(f"No price information found for {link}")
+#         return True  # Vehicle is still available
+#     except WebDriverException as e:
+#         logging.error(f"Error accessing {link}: {e}")
+#         return None  # Unable to determine status
 
 
-def update_db(driver):
-    """Update database to remove vehicles that are no longer available or have been sold"""
-    conn = sqlite3.connect("vehicles.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM vehicles")
-    vehicles = cursor.fetchall()
+# def update_db(driver):
+#     """Update database to remove vehicles that are no longer available or have been sold"""
+#     conn = sqlite3.connect("vehicles.db")
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT * FROM vehicles")
+#     vehicles = cursor.fetchall()
 
-    for vehicle in vehicles:
-        ref_no = vehicle[0]
-        link = vehicle[15]
+#     for vehicle in vehicles:
+#         ref_no = vehicle[0]
+#         link = vehicle[15]
 
-        is_available = check_vehicle_status(driver, link)
-        if is_available is False:
-            logging.info(
-                f"Vehicle {ref_no} has been sold or is under offer. Removing from database."
-            )
-            cursor.execute("DELETE FROM vehicles WHERE ref_no = ?", (ref_no,))
+#         is_available = check_vehicle_status(driver, link)
 
-    conn.commit()
-    conn.close()
+#         if is_available is False:
+#             logging.info(
+#                 f"Vehicle {ref_no} has been sold or is under offer. Removing from database."
+#             )
+#             cursor.execute("DELETE FROM vehicles WHERE ref_no = ?", (ref_no,))
+
+#     conn.commit()
+#     conn.close()
 
 
-# SHOULD THIS FUNCTION BE IN A SEPARATE FILE? 
-
+# Move to a separate file
 
 ##############################################################################################
 
@@ -460,7 +463,7 @@ if __name__ == "__main__":
 
     try:
         scrape_pages(driver)
-        update_db(driver)
+        # update_db(driver)
     finally:
         driver.quit()
         logging.info("Script finished, scraping complete!")

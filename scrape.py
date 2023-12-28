@@ -1,20 +1,3 @@
-"""
-Author: Zabir Ahasan
-Usage: python3 or python.exe main.py
-Notes:
-    - Make & activate Python environment for Windows: python -m venv env && env\Scripts\activate.bat
-
-    - Install packages with pip install -r requirements.txt
-
-    - Requires the ChromeDriver to be installed: ChromeDriver 119.*.*
-        - ChromeDriver executable must be in the same directory as this script or in the PATH environment variable
-
-    - .env file must be in the same directory as this script for environment variables to be loaded
-
-    - System Version: Windows 11, Python 3.11.6
-        - macOS requires the macOS version of ChromeDriver
-"""
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -72,7 +55,6 @@ def setup_logging(LOG_DIRECTORY):
 
     timestamp = datetime.datetime.now().strftime("%y-%m-%d_%I%M%p")
 
-    # log_filename = f"{LOG_DIRECTORY}/scaping_log_{timestamp}.log"
     log_filename = f"{main_logs_dir}/scraping_log_{timestamp}.log"  # Save logs in the main_logs subdirectory
 
     logging.basicConfig(

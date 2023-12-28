@@ -43,7 +43,6 @@ def meets_requirements(vehicle):
 
 
 def send_to_discord(content, message):
-    # data = {"content": f"{message} \U0001F473\n{content}"}
     data = {"content": f"{message}\n{content}"}
     response = requests.post(
         DISCORD_WEBHOOK_URL,

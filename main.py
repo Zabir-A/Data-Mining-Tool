@@ -69,8 +69,10 @@ def setup_logging(LOG_DIRECTORY):
 
         logging.info(f"Directory {LOG_DIRECTORY} created.")
 
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%I%M%p")
-    log_filename = f"{LOG_DIRECTORY}/log_{timestamp}.log"
+    timestamp = datetime.datetime.now().strftime("%y-%m-%d_%I%M%p")
+
+    log_filename = f"{LOG_DIRECTORY}/scaping_log_{timestamp}.log"
+
     logging.basicConfig(
         level=logging.INFO,  # Log only INFO, WARNING, ERROR, and CRITICAL levels.
         format="%(asctime)s - %(levelname)s - %(message)s",

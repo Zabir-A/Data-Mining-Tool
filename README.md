@@ -18,15 +18,30 @@ After undergoing various iterations and exploring different languages and framew
 
 ### Usage
 
-Refer to `main.py` for the main script. To run the project:
+Refer to `main.py` for the main script. 
+
+To run the main project (scraper):
 
 - Ensure Python 3.11.6 or later is installed.
 
-- Install required dependencies: pip install -r `requirements.txt`.
+- Install required dependencies: `pip install -r requirements.txt`.
     
 - Configure environment variables for database and Discord API credentials.
 
-- Run python main.py to start the data mining process.
+- Run `python main.py` to start the data mining process.
+
+To Update Database:
+
+- Run `python check_db.py`
+
+It will check the database with the site and remove any records of vehicles that's no longer available (sold or under offer)
+
+To send listing to Discord:
+
+- Run `python to_discord.py`
+
+It will send listings that meet the current criteria, it is defined in the script.
+
 
 ### Requirements
 
@@ -34,19 +49,21 @@ Refer to `main.py` for the main script. To run the project:
 - Selenium WebDriver for web scraping.
 - SQLite for database management.
 - Discord API token for bot integration.
-- ChromeDriver 119.. (compatible with your Chrome version).
+- ChromeDriver 119.x.x (compatible with Chrome version).
 
 ### Notes
 
 - The script requires ChromeDriver to be either in the script's directory or included in the system's PATH. For Windows users, a specific version of ChromeDriver is necessary, while macOS users will need the macOS-compatible version.
     
-- A .env file must be placed in the same directory as the script for loading environment variables.
+- A `.env` file must be placed in the same directory as the script for loading environment variables.
 
 ### Future Enhancements
 
-- Implementing advanced data analysis techniques on the scraped data for insights and trends.
+<!-- - Implementing advanced data analysis techniques on the scraped data for insights and trends. -->
     
 - Extending the tool's functionality to support multiple auction sites.
+
+- Improving modularity and script organization for scheduled jobs / tasks (Cron Jobs); ensures full automation
 
 - Enhancing the Discord bot to interactively respond to user queries about vehicle listings.
 

@@ -18,11 +18,11 @@ After undergoing various iterations and exploring different languages and framew
 
 ### Usage
 
-Refer to `main.py` for the main script. 
+<!-- Refer to `scrape.py` for the main script.  -->
 
 <!-- $\color{lightblue}To\ run\ the\ main\ project\ (scraper)$: -->
 
-To run the main project; scraper (`main.py`):
+<!-- To run the main project; scraper (`scraper.py`): -->
 
 - Ensure Python 3.11.6 or later is installed.
 
@@ -30,7 +30,7 @@ To run the main project; scraper (`main.py`):
     
 - Configure environment variables for database and Discord API credentials.
 
-- Run <i>`python main.py`</i> to start the data mining process.
+<!-- - Run <i>`python main.py`</i> to start the data mining process.
 
 To Update Database:
 
@@ -42,7 +42,25 @@ To send listing to Discord:
 
 - Run <i>`python to_discord.py`</i>
 
-It will send listings that meet the current criteria, it is defined in the script.
+It will send listings that meet the current criteria, it is defined in the script. -->
+
+**To run the entire project as scheduled:**
+
+Run <i>`python scheduler.py`</i>
+
+**To run indiviual scripts, proceed in the following order:**
+
+1. Start the data mining process (`scraper.py`):
+
+    <i>`python scraper.py`</i> - Mines and saves the vehicle data to the SQLite3 database
+
+2. To check and update the database: 
+
+    <i>`python check_db.py`</i> - Checks the database with the site and remove any records of vehicles that's no longer available (sold or under offer)
+
+3. To send listings to Discord:
+
+    <i>`python to_discord.py`</i> - Sends listings that meet the current criteria; defined in the script
 
 
 ### Requirements
@@ -67,7 +85,7 @@ It will send listings that meet the current criteria, it is defined in the scrip
     
 - Extending the tool's functionality to support multiple auction sites.
 
-- Improving modularity and script organization for scheduled jobs / tasks (Cron Jobs); ensures full automation
+- Improving modularity and script organization
 
 - Enhancing the Discord bot to interactively respond to user queries about vehicle listings.
 

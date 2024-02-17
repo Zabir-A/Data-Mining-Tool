@@ -34,6 +34,7 @@ After undergoing various iterations and exploring different languages and framew
 - Install required dependencies: <i>`pip install -r requirements.txt`</i>.
     
 - Configure environment variables for database and Discord API credentials.
+    - Create .env file to store website (URL) & Discord API credentials
 
 <!-- - Run <i>`python main.py`</i> to start the data mining process.
 

@@ -87,8 +87,7 @@ Run <i>`python scheduler.py`</i>
 ### Future Enhancements
 
 <!-- - Implementing advanced data analysis techniques on the scraped data for insights and trends. -->
-- Scheduled tasks or cronjobs to run scripts at specfic times.
-
+<!-- - Scheduled tasks or cronjobs to run scripts at specfic times. -->
 - Extending the tool's functionality to support multiple sites.
 
 - Improving modularity and script organization.

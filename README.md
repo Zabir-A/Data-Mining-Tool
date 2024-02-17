@@ -87,10 +87,11 @@ Run <i>`python scheduler.py`</i>
 ### Future Enhancements
 
 <!-- - Implementing advanced data analysis techniques on the scraped data for insights and trends. -->
-    
-- Extending the tool's functionality to support multiple auction sites.
+- Scheduled tasks or cronjobs to run scripts at specfic times.
 
-- Improving modularity and script organization
+- Extending the tool's functionality to support multiple sites.
+
+- Improving modularity and script organization.
 
 - Enhancing the Discord bot to interactively respond to user queries about vehicle listings.
 

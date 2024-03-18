@@ -57,7 +57,7 @@ def send_to_discord(content, message):
         print("Payload delivered successfully, code {}.".format(response.status_code))
 
 
-# Remove this line if you want to send more than one link
+# Remove line to send more than one link
 # link_sent = 0
 # delay = 3
 

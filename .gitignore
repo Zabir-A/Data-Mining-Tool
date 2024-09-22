@@ -1,7 +1,0 @@
-# Ignore
-.env
-./chromedriver-win64
-.main_old.py
-./env
-.vehicles.db
-./documentation
